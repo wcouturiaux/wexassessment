@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+  xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+    http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+  <changeSet id="2" author="couturiaux">
+    <insert tableName="transactions">
+      <column name="description" value="Enterprise ERP Software Renewal"/>
+      <column name="amount" valueNumeric="25237.22"/>
+      <column name="transaction_date" valueDate="2026-04-01"/>
+    </insert>
+
+    <insert tableName="transactions">
+      <column name="description" value="Cloud Infrastructure Services AWS"/>
+      <column name="amount" valueNumeric="12500.00"/>
+      <column name="transaction_date" valueDate="2026-04-03"/>
+    </insert>
+
+    <insert tableName="transactions">
+      <column name="description" value="Office Equipment and Hardware"/>
+      <column name="amount" valueNumeric="4500.50"/>
+      <column name="transaction_date" valueDate="2026-04-05"/>
+    </insert>
+
+    <insert tableName="transactions">
+      <column name="description" value="Corporate Travel Agency Fees"/>
+      <column name="amount" valueNumeric="8750.75"/>
+      <column name="transaction_date" valueDate="2026-04-10"/>
+    </insert>
+
+    <insert tableName="transactions">
+      <column name="description" value="Legal Retainer Fee - Q1"/>
+      <column name="amount" valueNumeric="15000.00"/>
+      <column name="transaction_date" valueDate="2026-04-12"/>
+    </insert>
+
+    <insert tableName="transactions">
+      <column name="description" value="Marketing Campaign Agency Fees"/>
+      <column name="amount" valueNumeric="22400.00"/>
+      <column name="transaction_date" valueDate="2026-04-15"/>
+    </insert>
+
+    <insert tableName="transactions">
+      <column name="description" value="Facilities Management Services"/>
+      <column name="amount" valueNumeric="3200.25"/>
+      <column name="transaction_date" valueDate="2026-04-18"/>
+    </insert>
+
+    <insert tableName="transactions">
+      <column name="description" value="IT Consultancy Services"/>
+      <column name="amount" valueNumeric="18650.00"/>
+      <column name="transaction_date" valueDate="2026-04-20"/>
+    </insert>
+
+    <insert tableName="transactions">
+      <column name="description" value="Logistics and Freight Shipping"/>
+      <column name="amount" valueNumeric="9800.40"/>
+      <column name="transaction_date" valueDate="2026-04-22"/>
+    </insert>
+
+    <insert tableName="transactions">
+      <column name="description" value="Cybersecurity Software License"/>
+      <column name="amount" valueNumeric="14250.00"/>
+      <column name="transaction_date" valueDate="2026-04-25"/>
+    </insert>
+  </changeSet>
+</databaseChangeLog>

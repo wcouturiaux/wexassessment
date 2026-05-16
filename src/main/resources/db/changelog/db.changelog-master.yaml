@@ -1,0 +1,7 @@
+databaseChangeLog:
+  - include:
+      file: changes/001-create-transactions-table.xml
+      relativeToChangelogFile: true
+  - include:
+      file: changes/002-seed-initial-transactions.xml
+      relativeToChangelogFile: true

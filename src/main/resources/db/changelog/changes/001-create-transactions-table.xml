@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+  xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+    http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+  <changeSet id="1" author="couturiaux">
+    <createTable tableName="transactions">
+      <column name="id" type="UUID">
+        <constraints primaryKey="true" nullable="false" />
+      </column>
+      <column name="description" type="VARCHAR(50)">
+        <constraints nullable="false" />
+      </column>
+      <column name="transaction_date" type="DATE">
+        <constraints nullable="false" />
+      </column>
+      <column name="amount" type="NUMERIC(15,2)" remarks="Transaction amount in USD.">
+        <constraints nullable="false" />
+      </column>
+      <column name="created_at" type="TIMESTAMPTZ">
+        <constraints nullable="false" />
+      </column>
+    </createTable>
+
+    <addCheckConstraint tableName="transactions" 
+                        constraintName="chk_transactions_amount_positive"
+                        expression="amount > 0"/>
+  </changeSet>
+</databaseChangeLog>
