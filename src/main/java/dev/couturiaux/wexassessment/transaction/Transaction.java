@@ -10,6 +10,7 @@ import jakarta.persistence.Table;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.OffsetDateTime;
+import java.util.Objects;
 import java.util.UUID;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
@@ -40,9 +41,9 @@ public class Transaction {
   protected Transaction() {}
 
   public Transaction(String description, BigDecimal amount, LocalDate transactionDate) {
-    this.description = description;
-    this.amount = amount;
-    this.transactionDate = transactionDate;
+    this.description = Objects.requireNonNull(description, "Description is required");
+    this.amount = Objects.requireNonNull(amount, "Financial amount is required");
+    this.transactionDate = Objects.requireNonNull(transactionDate, "Transaction date is required");
   }
 
   public UUID getId() {
