@@ -5,65 +5,85 @@
   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
     http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
 
-  <changeSet id="2" author="couturiaux">
+  <changeSet id="3" author="couturiaux">
     <insert tableName="transactions">
+      <column name="id" value="648e4268-3e42-45e0-8276-7871b6895318"/>
       <column name="description" value="Enterprise ERP Software Renewal"/>
       <column name="amount" valueNumeric="25237.22"/>
       <column name="transaction_date" valueDate="2026-04-01"/>
+      <column name="created_at" value="2026-05-16T10:00:00Z"/>
     </insert>
 
     <insert tableName="transactions">
+      <column name="id" value="f2b0b144-8395-46e3-8686-2a62886a8771"/>
       <column name="description" value="Cloud Infrastructure Services AWS"/>
       <column name="amount" valueNumeric="12500.00"/>
       <column name="transaction_date" valueDate="2026-04-03"/>
+      <column name="created_at" value="2026-05-16T10:05:00Z"/>
     </insert>
 
     <insert tableName="transactions">
+      <column name="id" value="e7a16f2c-5b23-448c-9a2c-6878b376483a"/>
       <column name="description" value="Office Equipment and Hardware"/>
       <column name="amount" valueNumeric="4500.50"/>
       <column name="transaction_date" valueDate="2026-04-05"/>
+      <column name="created_at" value="2026-05-16T10:10:00Z"/>
     </insert>
 
     <insert tableName="transactions">
+      <column name="id" value="c8d1f2e3-b4a5-4e6f-8d9e-1a2b3c4d5e6f"/>
       <column name="description" value="Corporate Travel Agency Fees"/>
       <column name="amount" valueNumeric="8750.75"/>
       <column name="transaction_date" valueDate="2026-04-10"/>
+      <column name="created_at" value="2026-05-16T10:15:00Z"/>
     </insert>
 
     <insert tableName="transactions">
+      <column name="id" value="a1b2c3d4-e5f6-4a5b-8c9d-1e2f3a4b5c6d"/>
       <column name="description" value="Legal Retainer Fee - Q1"/>
       <column name="amount" valueNumeric="15000.00"/>
       <column name="transaction_date" valueDate="2026-04-12"/>
+      <column name="created_at" value="2026-05-16T10:20:00Z"/>
     </insert>
 
     <insert tableName="transactions">
+      <column name="id" value="b2c3d4e5-f6a1-4b5c-8d9e-1f2a3b4c5d6e"/>
       <column name="description" value="Marketing Campaign Agency Fees"/>
       <column name="amount" valueNumeric="22400.00"/>
       <column name="transaction_date" valueDate="2026-04-15"/>
+      <column name="created_at" value="2026-05-16T10:25:00Z"/>
     </insert>
 
     <insert tableName="transactions">
+      <column name="id" value="c3d4e5f6-a1b2-4c5d-8e9f-1a2b3c4d5e6f"/>
       <column name="description" value="Facilities Management Services"/>
       <column name="amount" valueNumeric="3200.25"/>
       <column name="transaction_date" valueDate="2026-04-18"/>
+      <column name="created_at" value="2026-05-16T10:30:00Z"/>
     </insert>
 
     <insert tableName="transactions">
+      <column name="id" value="d4e5f6a1-b2c3-4d5e-8f9a-1b2c3d4e5f6a"/>
       <column name="description" value="IT Consultancy Services"/>
       <column name="amount" valueNumeric="18650.00"/>
       <column name="transaction_date" valueDate="2026-04-20"/>
+      <column name="created_at" value="2026-05-16T10:35:00Z"/>
     </insert>
 
     <insert tableName="transactions">
+      <column name="id" value="e5f6a1b2-c3d4-4e5f-8a9b-1c2d3e4f5a6b"/>
       <column name="description" value="Logistics and Freight Shipping"/>
       <column name="amount" valueNumeric="9800.40"/>
       <column name="transaction_date" valueDate="2026-04-22"/>
+      <column name="created_at" value="2026-05-16T10:40:00Z"/>
     </insert>
 
     <insert tableName="transactions">
+      <column name="id" value="f6a1b2c3-d4e5-4f6a-8b9c-1d2e3f4a5b6c"/>
       <column name="description" value="Cybersecurity Software License"/>
       <column name="amount" valueNumeric="14250.00"/>
       <column name="transaction_date" valueDate="2026-04-25"/>
+      <column name="created_at" value="2026-05-16T10:45:00Z"/>
     </insert>
   </changeSet>
 </databaseChangeLog>

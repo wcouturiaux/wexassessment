@@ -17,15 +17,11 @@
         <constraints nullable="false" />
       </column>
       <column name="amount" type="NUMERIC(15,2)" remarks="Transaction amount in USD.">
-        <constraints nullable="false" />
+        <constraints nullable="false" checkConstraint="CHECK (amount > 0)"/>
       </column>
       <column name="created_at" type="TIMESTAMPTZ">
         <constraints nullable="false" />
       </column>
     </createTable>
-
-    <addCheckConstraint tableName="transactions" 
-                        constraintName="chk_transactions_amount_positive"
-                        expression="amount > 0"/>
   </changeSet>
 </databaseChangeLog>
