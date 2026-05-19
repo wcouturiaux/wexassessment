@@ -45,7 +45,8 @@ public class TransactionService {
     return transactionRepository.findAll().stream().map(TransactionResponse::from).toList();
   }
 
-  public List<ConvertedTransactionResponse> getAllConvertedTransactions(String targetCurrency) {
+  public List<ConvertedTransactionResponse> getAllConvertedTransactions(
+      String targetCountry, String targetCurrency) {
     List<Transaction> rawTransactions = transactionRepository.findAll();
 
     Set<LocalDate> uniqueDates = extractUniqueDates(rawTransactions);

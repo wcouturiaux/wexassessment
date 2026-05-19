@@ -72,7 +72,7 @@ class TransactionServiceTest {
     when(transactionRepository.findAll()).thenReturn(List.of(mockTransaction));
 
     List<ConvertedTransactionResponse> result =
-        transactionService.getAllConvertedTransactions("EUR");
+        transactionService.getAllConvertedTransactions("DE", "EUR");
 
     assertThat(result).hasSize(1);
 

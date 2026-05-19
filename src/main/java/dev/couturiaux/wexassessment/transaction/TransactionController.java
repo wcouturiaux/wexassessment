@@ -40,11 +40,14 @@ public class TransactionController {
 
   @GetMapping("/conversions")
   public ResponseEntity<List<ConvertedTransactionResponse>> getAllConvertedTransactions(
+      @RequestParam(name = "target_country")
+          @Size(min = 2, max = 2, message = "Target country code must be 2 characters")
+          String targetCountry,
       @RequestParam(name = "target_currency")
           @Size(min = 3, max = 3, message = "Target currency code must be 3 characters")
           String targetCurrency) {
     List<ConvertedTransactionResponse> responses =
-        transactionService.getAllConvertedTransactions(targetCurrency);
+        transactionService.getAllConvertedTransactions(targetCountry, targetCurrency);
 
     return ResponseEntity.ok(responses);
   }

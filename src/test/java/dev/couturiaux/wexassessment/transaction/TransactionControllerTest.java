@@ -96,12 +96,13 @@ class TransactionControllerTest {
             exchangeRate,
             convertedAmount);
 
-    when(transactionService.getAllConvertedTransactions("EUR"))
+    when(transactionService.getAllConvertedTransactions("DE", "EUR"))
         .thenReturn(List.of(mockConvertedResponse, mockConvertedResponse2));
 
     mockMvc
         .perform(
             get("/api/v1/transactions/conversions")
+                .param("target_country", "DE")
                 .param("target_currency", "EUR")
                 .contentType(MediaType.APPLICATION_JSON))
         .andExpect(status().isOk())
@@ -203,7 +204,20 @@ class TransactionControllerTest {
             () ->
                 mockMvc.perform(
                     get("/api/v1/transactions/conversions")
+                        .param("target_country", "DE")
                         .param("target_currency", "EU")
+                        .contentType(MediaType.APPLICATION_JSON)))
+        .hasCauseInstanceOf(jakarta.validation.ConstraintViolationException.class);
+  }
+
+  @Test
+  void should_ThrowException_When_TargetCountryLengthIsInvalid() throws Exception {
+    assertThatThrownBy(
+            () ->
+                mockMvc.perform(
+                    get("/api/v1/transactions/conversions")
+                        .param("target_country", "D")
+                        .param("target_currency", "EUR")
                         .contentType(MediaType.APPLICATION_JSON)))
         .hasCauseInstanceOf(jakarta.validation.ConstraintViolationException.class);
   }
