@@ -1,0 +1,24 @@
+info:
+  name: Get Exchange Rate
+  type: http
+  seq: 2
+
+http:
+  method: get
+  url: https://api.fiscaldata.treasury.gov/services/api/fiscal_service/v1/accounting/od/rates_of_exchange?fields=exchange_rate,effective_date&filter=country_currency_desc:eq:Canada-Dollar,effective_date:gte:3/31/2025,effective_date:lte:3/31/2026&sort=-effective_date
+  params:
+    - name: fields
+      value: exchange_rate,effective_date
+      type: query
+    - name: filter
+      value: country_currency_desc:eq:Canada-Dollar,effective_date:gte:3/31/2025,effective_date:lte:3/31/2026
+      type: query
+    - name: sort
+      value: -effective_date
+      type: query
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5

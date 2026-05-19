@@ -5,10 +5,13 @@ info:
 
 http:
   method: GET
-  url: "{{baseUrl}}/api/v1/transactions/conversions?target_currency=EUR"
+  url: "{{baseUrl}}/api/v1/transactions/conversions?target_currency=CAD&target_country=CA"
   params:
     - name: target_currency
-      value: EUR
+      value: CAD
+      type: query
+    - name: target_country
+      value: CA
       type: query
   auth: inherit
 

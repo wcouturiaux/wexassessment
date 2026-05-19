@@ -1,5 +1,6 @@
 package dev.couturiaux.wexassessment.transaction;
 
+import dev.couturiaux.wexassessment.core.currency.TreasuryExchangeClient;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDate;
@@ -17,9 +18,12 @@ import org.springframework.transaction.annotation.Transactional;
 @Transactional(readOnly = true)
 public class TransactionService {
   private final TransactionRepository transactionRepository;
+  private final TreasuryExchangeClient treasuryExchangeClient;
 
-  public TransactionService(TransactionRepository transactionRepository) {
+  public TransactionService(
+      TransactionRepository transactionRepository, TreasuryExchangeClient treasuryExchangeClient) {
     this.transactionRepository = transactionRepository;
+    this.treasuryExchangeClient = treasuryExchangeClient;
   }
 
   @Transactional
@@ -51,7 +55,9 @@ public class TransactionService {
 
     Set<LocalDate> uniqueDates = extractUniqueDates(rawTransactions);
 
-    Map<LocalDate, BigDecimal> fxRateCache = buildFxRateCache(uniqueDates);
+    String countryCurrencyKey = targetCountry + "-" + targetCurrency;
+
+    Map<LocalDate, BigDecimal> fxRateCache = buildFxRateCache(uniqueDates, countryCurrencyKey);
 
     return rawTransactions.stream()
         .map(transaction -> convertToFxResponse(transaction, fxRateCache, targetCurrency))
@@ -62,9 +68,15 @@ public class TransactionService {
     return transactions.stream().map(Transaction::getTransactionDate).collect(Collectors.toSet());
   }
 
-  private Map<LocalDate, BigDecimal> buildFxRateCache(Set<LocalDate> dates) {
-    // TODO: Replace constant rate with api calls
-    return dates.stream().collect(Collectors.toMap(date -> date, date -> new BigDecimal("1.5")));
+  private Map<LocalDate, BigDecimal> buildFxRateCache(
+      Set<LocalDate> dates, String countryCurrencyKey) {
+    return dates.stream()
+        .collect(
+            Collectors.toMap(
+                date -> date,
+                date ->
+                    treasuryExchangeClient.getFxRate(
+                        countryCurrencyKey, date.minusMonths(6), date)));
   }
 
   private ConvertedTransactionResponse convertToFxResponse(

@@ -8,6 +8,7 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import dev.couturiaux.wexassessment.core.currency.TreasuryExchangeClient;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDate;
@@ -27,6 +28,7 @@ import org.springframework.test.util.ReflectionTestUtils;
 class TransactionServiceTest {
 
   @Mock private TransactionRepository transactionRepository;
+  @Mock private TreasuryExchangeClient treasuryExchangeClient;
 
   @InjectMocks private TransactionService transactionService;
 
@@ -70,6 +72,7 @@ class TransactionServiceTest {
   @Test
   void should_ReturnConvertedTransactions_When_TransactionsExist() {
     when(transactionRepository.findAll()).thenReturn(List.of(mockTransaction));
+    when(treasuryExchangeClient.getFxRate(any(), any(), any())).thenReturn(new BigDecimal("1.5"));
 
     List<ConvertedTransactionResponse> result =
         transactionService.getAllConvertedTransactions("DE", "EUR");
