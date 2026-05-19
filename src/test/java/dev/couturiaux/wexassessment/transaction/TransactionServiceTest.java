@@ -1,6 +1,8 @@
 package dev.couturiaux.wexassessment.transaction;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -55,12 +57,12 @@ class TransactionServiceTest {
 
     when(transactionRepository.save(any(Transaction.class))).thenReturn(mockSavedEntity);
 
-    Transaction response = transactionService.createNewTransaction(requestDto);
+    TransactionResponse response = transactionService.createNewTransaction(requestDto);
 
-    assertThat(response.getId()).isNotNull();
-    assertThat(response.getDescription()).isEqualTo("Legal Retainer");
-    assertThat(response.getAmount()).isEqualTo(new BigDecimal("1144.30"));
-    assertThat(response.getTransactionDate()).isEqualTo(LocalDate.of(2026, 5, 16));
+    assertThat(response.id()).isNotNull();
+    assertThat(response.description()).isEqualTo("Legal Retainer");
+    assertThat(response.amount()).isEqualTo(new BigDecimal("1144.30"));
+    assertThat(response.transactionDate()).isEqualTo(LocalDate.of(2026, 5, 16));
 
     verify(transactionRepository, times(1)).save(any(Transaction.class));
   }
@@ -141,27 +143,26 @@ class TransactionServiceTest {
     when(transactionRepository.findById(fakeTransactionId))
         .thenReturn(Optional.of(mockTransaction));
 
-    Optional<TransactionResponse> response =
-        transactionService.getTransactionById(fakeTransactionId);
+    TransactionResponse response = transactionService.getTransactionById(fakeTransactionId);
 
-    assertThat(response).isPresent();
-    assertThat(response.get().id()).isEqualTo(fakeTransactionId.toString());
-    assertThat(response.get().description()).isEqualTo("Test Purchase");
-    assertThat(response.get().amount()).isEqualTo(new BigDecimal("100.00"));
-    assertThat(response.get().transactionDate()).isEqualTo(LocalDate.of(2026, 5, 16));
+    assertNotNull(response);
+    assertThat(response.id()).isEqualTo(fakeTransactionId.toString());
+    assertThat(response.description()).isEqualTo("Test Purchase");
+    assertThat(response.amount()).isEqualTo(new BigDecimal("100.00"));
+    assertThat(response.transactionDate()).isEqualTo(LocalDate.of(2026, 5, 16));
 
     verify(transactionRepository, times(1)).findById(fakeTransactionId);
   }
 
   @Test
   void should_ReturnEmptyOptional_When_IdDoesNotExist() {
-    when(transactionRepository.findById(fakeTransactionId)).thenReturn(Optional.empty());
+    UUID missingTransactionId = UUID.randomUUID();
+    when(transactionRepository.findById(missingTransactionId)).thenReturn(Optional.empty());
 
-    Optional<TransactionResponse> response =
-        transactionService.getTransactionById(fakeTransactionId);
+    assertThatThrownBy(() -> transactionService.getTransactionById(missingTransactionId))
+        .isInstanceOf(IllegalArgumentException.class)
+        .hasMessageContaining("not found");
 
-    assertThat(response).isEmpty();
-
-    verify(transactionRepository, times(1)).findById(fakeTransactionId);
+    verify(transactionRepository, times(1)).findById(missingTransactionId);
   }
 }

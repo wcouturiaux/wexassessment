@@ -1,0 +1,21 @@
+info:
+  name: Get All Treasury Countries with Currency Name
+  type: http
+  seq: 2
+
+http:
+  method: get
+  url: https://api.fiscaldata.treasury.gov/services/api/fiscal_service/v1/accounting/od/rates_of_exchange?fields=country,currency&page[size]=265
+  params:
+    - name: fields
+      value: country,currency
+      type: query
+    - name: page[size]
+      value: "265"
+      type: query
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5

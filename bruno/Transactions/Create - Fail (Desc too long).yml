@@ -1,0 +1,23 @@
+info:
+  name: Create - Fail (Desc too long)
+  type: http
+  seq: 7
+
+http:
+  method: POST
+  url: "{{baseUrl}}/api/v1/transactions"
+  body:
+    type: json
+    data: |-
+      {
+        "description": "INV 2026 8941 WEX CORP RECURRING SOFTWARE LICENSE FE",
+        "transaction_date": "2026-04-01",
+        "amount": "30000.00"
+      }
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5

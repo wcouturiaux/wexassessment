@@ -1,0 +1,19 @@
+info:
+  name: Get All Converted
+  type: http
+  seq: 1
+
+http:
+  method: GET
+  url: "{{baseUrl}}/api/v1/transactions/conversions?target_currency=EUR"
+  params:
+    - name: target_currency
+      value: EUR
+      type: query
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5

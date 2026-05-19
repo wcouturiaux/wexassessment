@@ -1,0 +1,23 @@
+info:
+  name: Create - Fail (No Date)
+  type: http
+  seq: 8
+
+http:
+  method: POST
+  url: "{{baseUrl}}/api/v1/transactions"
+  body:
+    type: json
+    data: |-
+      {
+        "description": "INV 2026 8941 WEX CORP RECURRING SOFTWARE LICENSE FE",
+        "transaction_date": null,
+        "amount": "30000.00"
+      }
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5

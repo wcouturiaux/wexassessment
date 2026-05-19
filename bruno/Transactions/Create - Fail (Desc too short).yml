@@ -1,0 +1,23 @@
+info:
+  name: Create - Fail (Desc too short)
+  type: http
+  seq: 6
+
+http:
+  method: POST
+  url: "{{baseUrl}}/api/v1/transactions"
+  body:
+    type: json
+    data: |-
+      {
+        "description": "Tx",
+        "transaction_date": "2026-04-01",
+        "amount": "30000.00"
+      }
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5

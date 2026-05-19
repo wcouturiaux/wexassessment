@@ -6,7 +6,6 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -24,18 +23,22 @@ public class TransactionService {
   }
 
   @Transactional
-  public Transaction createNewTransaction(CreateTransactionRequest transactionDto) {
+  public TransactionResponse createNewTransaction(CreateTransactionRequest transactionDto) {
     Transaction newTransaction =
         new Transaction(
             transactionDto.description(),
             transactionDto.amount(),
             transactionDto.transactionDate());
-
-    return transactionRepository.save(newTransaction);
+    Transaction transaction = transactionRepository.save(newTransaction);
+    return mapToResponse(transaction);
   }
 
-  public Optional<TransactionResponse> getTransactionById(@NonNull UUID id) {
-    return transactionRepository.findById(id).map(TransactionResponse::from);
+  public TransactionResponse getTransactionById(@NonNull UUID id) {
+    // TODO: replace error thown with custom after made
+    return transactionRepository
+        .findById(id)
+        .map(TransactionResponse::from)
+        .orElseThrow(() -> new IllegalArgumentException("Transaction ID not found."));
   }
 
   public List<TransactionResponse> getAllTransactions() {
@@ -85,5 +88,13 @@ public class TransactionService {
         targetCurrency,
         fxRate,
         convertedAmount);
+  }
+
+  private TransactionResponse mapToResponse(Transaction transaction) {
+    return new TransactionResponse(
+        transaction.getId().toString(),
+        transaction.getDescription(),
+        transaction.getTransactionDate(),
+        transaction.getAmount());
   }
 }
