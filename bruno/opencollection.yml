@@ -8,3 +8,6 @@ extensions:
     ignore:
       - node_modules
       - .git
+
+vars:
+  baseUrl: http://localhost:8080

@@ -137,6 +137,12 @@ A git-friendly, folder-organized **Bruno Collection** is located in the `/bruno`
   1. Install the official Bruno extension via [VS Code Marketplace](https://marketplace.visualstudio.com/items?itemName=bruno-api-client.bruno) or [Open VSX Registry](https://open-vsx.org/vscode/item?itemName=bruno-api-client.bruno).
   2. Open the project root in VS Code; the extension will auto-detect the `/bruno` directory.
   3. Run any `.yml` request files directly within your editor panels (ensuring the `local` environment is selected).
+- **Running Automated Collection Tests**:
+  Every request in this collection is pre-configured with declarative assertions to validate HTTP status codes, response structures, and exact field values.
+  - *Via Bruno GUI / VS Code Extension*: Right-click the `Transactions` folder or the parent collection in the sidebar/extension explorer, select **Run** (or **Run Folder**), and execute all 11 requests sequentially.
+  - *Via Bruno CLI*:
+    1. Install the CLI tool globally: `npm install -g @usebruno/cli`
+    2. Execute the suite from the repository root: `bru run bruno`
 
 #### Option B: Postman
 A pre-exported **Postman Collection** is provided as a single file in the root directory:

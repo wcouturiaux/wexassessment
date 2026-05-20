@@ -21,3 +21,21 @@ settings:
   timeout: 0
   followRedirects: true
   maxRedirects: 5
+
+runtime:
+  assertions:
+    - expression: res.status
+      operator: eq
+      value: 200
+    - expression: res.body.id
+      operator: isString
+    - expression: res.body.description
+      operator: eq
+      value: First Creation
+  scripts:
+    - type: after-response
+      code: |-
+        const id = res.body.id;
+        if (id) {
+          bru.setVar('transactionId', id);
+        }

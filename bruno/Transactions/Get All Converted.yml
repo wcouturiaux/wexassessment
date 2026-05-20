@@ -1,7 +1,7 @@
 info:
   name: Get All Converted
   type: http
-  seq: 1
+  seq: 5
 
 http:
   method: GET
@@ -20,3 +20,11 @@ settings:
   timeout: 0
   followRedirects: true
   maxRedirects: 5
+
+runtime:
+  assertions:
+    - expression: res.status
+      operator: eq
+      value: 200
+    - expression: res.body
+      operator: isArray

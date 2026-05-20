@@ -1,15 +1,11 @@
 info:
   name: Get By Id
   type: http
-  seq: 1
+  seq: 2
 
 http:
   method: GET
-  url: "{{baseUrl}}/api/v1/transactions/:id"
-  params:
-    - name: id
-      value: 648e4268-3e42-45e0-8276-7871b6895318
-      type: path
+  url: "{{baseUrl}}/api/v1/transactions/{{transactionId}}"
   auth: inherit
 
 settings:
@@ -17,3 +13,13 @@ settings:
   timeout: 0
   followRedirects: true
   maxRedirects: 5
+
+runtime:
+  assertions:
+    - expression: res.status
+      operator: eq
+      value: 200
+    - expression: res.body.id
+      operator: isString
+    - expression: res.body.description
+      operator: isString

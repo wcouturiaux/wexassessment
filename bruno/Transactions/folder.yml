@@ -3,4 +3,8 @@ info:
   type: folder
   seq: 1
 
-request: {}
+scripts:
+  pre-request: |-
+    if (!bru.getVar('baseUrl')) {
+      bru.setVar('baseUrl', 'http://localhost:8080');
+    }

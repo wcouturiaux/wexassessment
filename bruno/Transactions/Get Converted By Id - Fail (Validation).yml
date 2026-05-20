@@ -8,7 +8,7 @@ http:
   url: "{{baseUrl}}/api/v1/transactions/:id/conversions?target_currency=CADDY&target_country=CANADA"
   params:
     - name: id
-      value: 648e4268-3e42-45e0-8276-7871b6895318
+      value: 00000000-0000-0000-0000-000000000000
       type: path
     - name: target_currency
       value: CADDY
@@ -23,3 +23,12 @@ settings:
   timeout: 0
   followRedirects: true
   maxRedirects: 5
+
+runtime:
+  assertions:
+    - expression: res.status
+      operator: eq
+      value: 400
+    - expression: res.body.title
+      operator: eq
+      value: Validation Failed

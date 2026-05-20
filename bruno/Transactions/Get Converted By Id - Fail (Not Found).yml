@@ -23,3 +23,12 @@ settings:
   timeout: 0
   followRedirects: true
   maxRedirects: 5
+
+runtime:
+  assertions:
+    - expression: res.status
+      operator: eq
+      value: 404
+    - expression: res.body.title
+      operator: eq
+      value: Resource Not Found
