@@ -83,7 +83,13 @@ The service exposes versioned REST endpoints utilizing a `snake_case` JSON prope
 ## 4. Verification & Code Quality
 
 ### Running Tests
-The test suite includes extensive controller request validations, transaction mapping checks, mock integration verifications, and custom roundoff logic checks.
+The test suite consists of **40 tests** covering unit validations, entity mappings, business logic edge-cases, and a comprehensive end-to-end integration test suite:
+* **Unit Tests**: Coverage for controller request validation bounds, DTO/Entity parsing, and service conversion math.
+* **Integration Tests (`TransactionIntegrationTest`)**: Exercises the system holistically:
+  - **Happy Path**: Verifies transaction insertion via REST HTTP `POST`, persistence in the real H2 database, fetching via `GET`, and conversion by mocking external HTTP endpoints.
+  - **API Error Boundaries**: Verifies global exception mapping for validation failures (400), missing entities (404), and unsupported currency keys (422).
+  - **API Resilience**: Verifies graceful fallback responses (200 OK with custom `error_message` payload) under simulated Treasury API timeouts or historical lookback gaps.
+
 ```bash
 ./mvnw test
 ```
