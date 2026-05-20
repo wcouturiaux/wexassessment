@@ -7,11 +7,13 @@ A Spring Boot REST API for storing purchase transactions in USD and converting t
 ## 1. Getting Started
 
 ### Prerequisites
+
 - **Java 21**
 - **Maven 3.9+** (or use the provided Maven Wrapper `./mvnw`)
 - **Docker** (optional, required for PostgreSQL profile)
 
 ### Running Locally (Default: H2 In-Memory DB)
+
 By default, the application runs using an in-memory H2 database, requiring zero setup.
 
 1. **Build and compile:**
@@ -27,6 +29,7 @@ By default, the application runs using an in-memory H2 database, requiring zero 
    - **H2 Console**: [http://localhost:8080/h2-console](http://localhost:8080/h2-console) (JDBC URL: `jdbc:h2:mem:transactionsdb`, Username: `sa`, Password: empty)
 
 ### Running with PostgreSQL (Production-like Setup)
+
 To run the service against a PostgreSQL instance:
 
 1. **Spin up the database container:**
@@ -43,27 +46,33 @@ To run the service against a PostgreSQL instance:
 ## 2. Core Design Decisions & Assumptions
 
 ### External API Integration (U.S. Treasury)
-* **API Endpoint**: Rates are sourced from the official *U.S. Treasury Reporting Rates of Exchange* endpoint.
-* **Closest Rate Resolution**: If no exact rate matches a transaction date, the application queries the Treasury API for the date range from the transaction date back to 6 months prior. By sorting the API results descending by effective date (`sort=-effective_date`), the service retrieves the closest historical rate prior to or on the transaction date as the first record in a single request (no day-by-day API scanning).
+
+- **API Endpoint**: Rates are sourced from the official _U.S. Treasury Reporting Rates of Exchange_ endpoint.
+- **Closest Rate Resolution**: If no exact rate matches a transaction date, the application queries the Treasury API for the date range from the transaction date back to 6 months prior. By sorting the API results descending by effective date (`sort=-effective_date`), the service retrieves the closest historical rate prior to or on the transaction date as the first record in a single request (no day-by-day API scanning).
 
 ### Performance & Caching
-* **Bulk Conversion Cache**: When converting bulk transactions (`GET /api/v1/transactions/conversions`), the application groups transactions by their unique transaction dates. It queries the Treasury API once per unique date and caches the result for that batch, drastically reducing external HTTP roundtrips and API latency.
-* **Resiliency**: If an exchange rate cannot be found for a transaction date within the 6-month window, the individual transaction response reports a clear error message in the bulk list, allowing the rest of the transactions to convert successfully rather than crashing the entire response.
+
+- **Bulk Conversion Cache**: When converting bulk transactions (`GET /api/v1/transactions/conversions`), the application groups transactions by their unique transaction dates. It queries the Treasury API once per unique date and caches the result for that batch, drastically reducing external HTTP roundtrips and API latency.
+- **Resiliency**: If an exchange rate cannot be found for a transaction date within the 6-month window, the individual transaction response reports a clear error message in the bulk list, allowing the rest of the transactions to convert successfully rather than crashing the entire response.
 
 ### Persistence & Migrations
-* **Schema Evolution**: Database migrations are version-controlled using **Liquibase** (located under `src/main/resources/db/changelog`). 
-* **Dynamic Profiles**: The application maintains a clean separation between development (H2 in-memory, Hibernate `validate`, schema seeded via Liquibase) and PostgreSQL profiles via Spring config files.
+
+- **Schema Evolution**: Database migrations are version-controlled using **Liquibase** (located under `src/main/resources/db/changelog`).
+- **Dynamic Profiles**: The application maintains a clean separation between development (H2 in-memory, Hibernate `validate`, schema seeded via Liquibase) and PostgreSQL profiles via Spring config files.
 
 ### Precision & Validation
-* **Rounding**: Converted purchase amounts are rounded to exactly two decimal places using standard half-up rounding (`RoundingMode.HALF_UP`) to ensure financial accuracy.
-* **Schema Validation**: Global controller validation enforces that descriptions are between 3 and 50 characters, purchase amounts are positive (>= 0.01) with up to 2 decimal places, and transaction dates cannot be in the future.
-* **Naming Convention**: A snake_case JSON property naming strategy is configured globally to match REST standard guidelines.
+
+- **Rounding**: Converted purchase amounts are rounded to exactly two decimal places using standard half-up rounding (`RoundingMode.HALF_UP`) to ensure financial accuracy.
+- **Schema Validation**: Global controller validation enforces that descriptions are between 3 and 50 characters, purchase amounts are positive (>= 0.01) with up to 2 decimal places, and transaction dates cannot be in the future.
+- **Naming Convention**: A snake_case JSON property naming strategy is configured globally to match REST standard guidelines.
 
 ### Requirements Traceability & API Mapping
+
 To ensure robust alignment with the technical constraints in the email prompt and the follow-up clarifications:
-* **API Path Versioning**: The service follows industry production standards by using API versioned routing (`/api/v1/transactions`).
-* **Treasury API Precision Mapping**: The U.S. Treasury database maps exchange rates using unique country-currency pair descriptions rather than standalone ISO currency codes (e.g., distinguishing different nations using the same currency name). To guarantee 100% precise resolution, the `/conversions` API accepts both `target_country` (2-letter ISO) and `target_currency` (3-letter ISO) parameters.
-* **Bulk Currency Conversion**: In line with the follow-up clarification favoring bulk list conversion ("Preferred to list multiple transactions with currency conversion applied is preferred"), conversion is orchestrated cleanly in bulk under `GET /api/v1/transactions/conversions` with optional error messaging per record.
+
+- **API Path Versioning**: The service follows industry production standards by using API versioned routing (`/api/v1/transactions`).
+- **Treasury API Precision Mapping**: The U.S. Treasury database maps exchange rates using unique country-currency pair descriptions rather than standalone ISO currency codes (e.g., distinguishing different nations using the same currency name). To guarantee 100% precise resolution, the `/conversions` API accepts both `target_country` (2-letter ISO) and `target_currency` (3-letter ISO) parameters.
+- **Bulk Currency Conversion**: In line with the follow-up clarification favoring bulk list conversion ("Preferred to list multiple transactions with currency conversion applied is preferred"), conversion is orchestrated cleanly in bulk under `GET /api/v1/transactions/conversions` with optional error messaging per record.
 
 ---
 
@@ -71,22 +80,24 @@ To ensure robust alignment with the technical constraints in the email prompt an
 
 The service exposes versioned REST endpoints utilizing a `snake_case` JSON property naming strategy. For full interactive schemas, validation rules, and live testing, run the application and visit the **[Swagger UI](http://localhost:8080/swagger-ui.html)**.
 
-| HTTP Method | Path | Description | Key Parameters / Request Body |
-| :--- | :--- | :--- | :--- |
-| **POST** | `/api/v1/transactions` | Store a new purchase transaction in USD | Request body (`description`, `amount`, `transaction_date`) |
-| **GET** | `/api/v1/transactions` | Retrieve all purchase transactions in USD | None |
-| **GET** | `/api/v1/transactions/{id}` | Retrieve a single transaction by UUID | `id` (path parameter) |
-| **GET** | `/api/v1/transactions/conversions` | Retrieve transactions converted to target currency | `target_country` (query, e.g. `CA`), `target_currency` (query, e.g. `CAD`) |
-| **GET** | `/api/v1/transactions/{id}/conversions` | Retrieve a single transaction converted to target currency | `id` (path parameter), `target_country` (query, e.g. `CA`), `target_currency` (query, e.g. `CAD`) |
+| HTTP Method | Path                                    | Description                                                | Key Parameters / Request Body                                                                     |
+| :---------- | :-------------------------------------- | :--------------------------------------------------------- | :------------------------------------------------------------------------------------------------ |
+| **POST**    | `/api/v1/transactions`                  | Store a new purchase transaction in USD                    | Request body (`description`, `amount`, `transaction_date`)                                        |
+| **GET**     | `/api/v1/transactions`                  | Retrieve all purchase transactions in USD                  | None                                                                                              |
+| **GET**     | `/api/v1/transactions/{id}`             | Retrieve a single transaction by UUID                      | `id` (path parameter)                                                                             |
+| **GET**     | `/api/v1/transactions/conversions`      | Retrieve transactions converted to target currency         | `target_country` (query, e.g. `CA`), `target_currency` (query, e.g. `CAD`)                        |
+| **GET**     | `/api/v1/transactions/{id}/conversions` | Retrieve a single transaction converted to target currency | `id` (path parameter), `target_country` (query, e.g. `CA`), `target_currency` (query, e.g. `CAD`) |
 
 ---
 
 ## 4. Verification & Code Quality
 
 ### Running Tests
-The test suite consists of **43 tests** covering unit validations, entity mappings, business logic edge-cases, and a comprehensive end-to-end integration test suite:
-* **Unit Tests**: Coverage for controller request validation bounds, DTO/Entity parsing, and service conversion math.
-* **Integration Tests (`TransactionIntegrationTest`)**: Exercises the system holistically:
+
+The test suite consists of **44 tests** covering unit validations, entity mappings, business logic edge-cases, and a comprehensive end-to-end integration test suite:
+
+- **Unit Tests**: Coverage for controller request validation bounds, DTO/Entity parsing, and service conversion math.
+- **Integration Tests (`TransactionIntegrationTest`)**: Exercises the system holistically:
   - **Happy Path**: Verifies transaction insertion via REST HTTP `POST`, persistence in the real H2 database, fetching via `GET`, and conversion by mocking external HTTP endpoints.
   - **API Error Boundaries**: Verifies global exception mapping for validation failures (400), missing entities (404), and unsupported currency keys (422).
   - **API Resilience**: Verifies graceful fallback responses (200 OK with custom `error_message` payload) under simulated Treasury API timeouts or historical lookback gaps.
@@ -96,12 +107,42 @@ The test suite consists of **43 tests** covering unit validations, entity mappin
 ```
 
 ### Spotless Code Style Enforcement
+
 The codebase adheres strictly to the **Google Java Format** style via Spotless.
-* **Check code style compliance:**
+
+- **Check code style compliance:**
   ```bash
   ./mvnw spotless:check
   ```
-* **Auto-apply correct formatting:**
+- **Auto-apply correct formatting:**
   ```bash
   ./mvnw spotless:apply
   ```
+
+---
+
+### API Manual Testing Collections
+
+To make manual API testing and exploration completely seamless, both **Bruno** and **Postman** configurations are pre-packaged:
+
+#### Option A: Bruno (Recommended)
+A git-friendly, folder-organized **Bruno Collection** is located in the `/bruno` directory. You can run requests using either the **standalone Bruno client** or the **Bruno IDE Extension** (e.g. inside VS Code):
+
+- **Using the Standalone Client**:
+  1. Open [Bruno](https://www.usebruno.com/).
+  2. Select **Open Collection** and choose the `bruno` folder at the root of this repository.
+  3. Select the `local` environment profile in the upper-right corner.
+  4. Run any pre-saved requests inside the `Transactions` folder.
+- **Using the Bruno VS Code Extension**:
+  1. Install the official Bruno extension via [VS Code Marketplace](https://marketplace.visualstudio.com/items?itemName=bruno-api-client.bruno) or [Open VSX Registry](https://open-vsx.org/vscode/item?itemName=bruno-api-client.bruno).
+  2. Open the project root in VS Code; the extension will auto-detect the `/bruno` directory.
+  3. Run any `.yml` request files directly within your editor panels (ensuring the `local` environment is selected).
+
+#### Option B: Postman
+A pre-exported **Postman Collection** is provided as a single file in the root directory:
+1. Open the [Postman](https://www.postman.com/) client.
+2. Click **Import** in the top navigation panel.
+3. Drag and drop the `postman_collection.json` file from this project's root folder.
+4. Set or inspect the active collection variable `baseUrl` (configured by default to `http://localhost:8080`).
+5. Run any saved transactions and conversion queries.
+

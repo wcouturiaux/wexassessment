@@ -1,0 +1,25 @@
+info:
+  name: Get Converted By Id
+  type: http
+  seq: 9
+
+http:
+  method: GET
+  url: "{{baseUrl}}/api/v1/transactions/:id/conversions?target_currency=CAD&target_country=CA"
+  params:
+    - name: id
+      value: 648e4268-3e42-45e0-8276-7871b6895318
+      type: path
+    - name: target_currency
+      value: CAD
+      type: query
+    - name: target_country
+      value: CA
+      type: query
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5

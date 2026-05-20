@@ -1,0 +1,117 @@
+{
+  "info": {
+    "name": "Wex-Project",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Transactions",
+      "item": [
+        {
+          "name": "Create Transaction",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"description\": \"Wireless Noise-Canceling Headphones\",\n  \"amount\": 299.99,\n  \"transaction_date\": \"2026-05-15\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/transactions",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "transactions"]
+            }
+          }
+        },
+        {
+          "name": "Get All",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/transactions",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "transactions"]
+            }
+          }
+        },
+        {
+          "name": "Get By Id",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/transactions/:id",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "transactions", ":id"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "648e4268-3e42-45e0-8276-7871b6895318"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get All Converted",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/transactions/conversions?target_currency=CAD&target_country=CA",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "transactions", "conversions"],
+              "query": [
+                {
+                  "key": "target_currency",
+                  "value": "CAD"
+                },
+                {
+                  "key": "target_country",
+                  "value": "CA"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Converted By Id",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/transactions/:id/conversions?target_currency=CAD&target_country=CA",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "transactions", ":id", "conversions"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "648e4268-3e42-45e0-8276-7871b6895318"
+                }
+              ],
+              "query": [
+                {
+                  "key": "target_currency",
+                  "value": "CAD"
+                },
+                {
+                  "key": "target_country",
+                  "value": "CA"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:8080",
+      "type": "string"
+    }
+  ]
+}
