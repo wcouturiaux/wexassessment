@@ -28,6 +28,12 @@ By default, the application runs using an in-memory H2 database, requiring zero 
    - **Swagger UI**: [http://localhost:8080/swagger-ui.html](http://localhost:8080/swagger-ui.html)
    - **H2 Console**: [http://localhost:8080/h2-console](http://localhost:8080/h2-console) (JDBC URL: `jdbc:h2:mem:transactionsdb`, Username: `sa`, Password: empty)
 
+   > [!TIP]
+   > For manual testing and querying the currency conversion endpoints (via browser, cURL, Swagger UI, etc.), refer to [country-currency-reference.csv](./country-currency-reference.csv) at the project root for the supported country-currency parameters (e.g. use `target_country=CA` & `target_currency=CAD` for Canada).
+
+
+
+
 ### Running with PostgreSQL (Production-like Setup)
 
 To run the service against a PostgreSQL instance:
@@ -72,7 +78,11 @@ To ensure robust alignment with the technical constraints in the email prompt an
 
 - **API Path Versioning**: The service follows industry production standards by using API versioned routing (`/api/v1/transactions`).
 - **Treasury API Precision Mapping**: The U.S. Treasury database maps exchange rates using unique country-currency pair descriptions rather than standalone ISO currency codes (e.g., distinguishing different nations using the same currency name). To guarantee 100% precise resolution, the `/conversions` API accepts both `target_country` (2-letter ISO) and `target_currency` (3-letter ISO) parameters.
+
+  > [!TIP]
+  > To find supported parameters for your testing (e.g. `target_country=CA` & `target_currency=CAD` for Canada), consult the pre-compiled reference list: [country-currency-reference.csv](./country-currency-reference.csv) at the project root.
 - **Bulk Currency Conversion**: In line with the follow-up clarification favoring bulk list conversion ("Preferred to list multiple transactions with currency conversion applied is preferred"), conversion is orchestrated cleanly in bulk under `GET /api/v1/transactions/conversions` with optional error messaging per record.
+
 
 ---
 
