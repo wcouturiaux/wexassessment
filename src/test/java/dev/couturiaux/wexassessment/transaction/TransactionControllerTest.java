@@ -1,6 +1,5 @@
 package dev.couturiaux.wexassessment.transaction;
 
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -12,13 +11,13 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Objects;
 import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.data.jpa.mapping.JpaMetamodelMappingContext;
-import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
@@ -39,6 +38,7 @@ class TransactionControllerTest {
   private String description;
   private LocalDate transactionDate;
   private TransactionResponse mockResponse;
+  private static final String APPLICATION_JSON = "application/json";
 
   @BeforeEach
   void setUp() {
@@ -64,8 +64,8 @@ class TransactionControllerTest {
     mockMvc
         .perform(
             post("/api/v1/transactions")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(request)))
+                .contentType(APPLICATION_JSON)
+                .content(Objects.requireNonNull(objectMapper.writeValueAsString(request))))
         .andExpect(status().isOk())
         .andExpect(jsonPath("$.id").value(transactionIdResponse))
         .andExpect(jsonPath("$.description").value(description));
@@ -84,7 +84,8 @@ class TransactionControllerTest {
             transactionAmount,
             "EUR",
             exchangeRate,
-            convertedAmount);
+            convertedAmount,
+            null);
 
     ConvertedTransactionResponse mockConvertedResponse2 =
         new ConvertedTransactionResponse(
@@ -94,7 +95,8 @@ class TransactionControllerTest {
             transactionAmount,
             "EUR",
             exchangeRate,
-            convertedAmount);
+            convertedAmount,
+            null);
 
     when(transactionService.getAllConvertedTransactions("DE", "EUR"))
         .thenReturn(List.of(mockConvertedResponse, mockConvertedResponse2));
@@ -104,7 +106,7 @@ class TransactionControllerTest {
             get("/api/v1/transactions/conversions")
                 .param("target_country", "DE")
                 .param("target_currency", "EUR")
-                .contentType(MediaType.APPLICATION_JSON))
+                .contentType(APPLICATION_JSON))
         .andExpect(status().isOk())
         .andExpect(jsonPath("$.size()").value(2))
         .andExpect(jsonPath("$[0].id").value(transactionIdResponse))
@@ -122,7 +124,7 @@ class TransactionControllerTest {
     when(transactionService.getAllTransactions()).thenReturn(List.of(mockResponse, mockResponse2));
 
     mockMvc
-        .perform(get("/api/v1/transactions").contentType(MediaType.APPLICATION_JSON))
+        .perform(get("/api/v1/transactions").contentType(APPLICATION_JSON))
         .andExpect(status().isOk())
         .andExpect(jsonPath("$.size()").value(2))
         .andExpect(jsonPath("$[0].id").value(transactionIdResponse))
@@ -137,26 +139,22 @@ class TransactionControllerTest {
 
     mockMvc
         .perform(
-            get("/api/v1/transactions/%s".formatted(transactionId))
-                .contentType(MediaType.APPLICATION_JSON))
+            get("/api/v1/transactions/%s".formatted(transactionId)).contentType(APPLICATION_JSON))
         .andExpect(status().isOk())
         .andExpect(jsonPath("$.id").value(transactionIdResponse));
   }
 
   @Test
-  void should_ThrowException_When_IdDoesNotExist() throws Exception {
+  void should_ReturnNotFound_When_IdDoesNotExist() throws Exception {
     UUID nonExistentId = UUID.randomUUID();
 
     when(transactionService.getTransactionById(nonExistentId))
-        .thenThrow(new IllegalArgumentException("Transaction ID not found."));
+        .thenThrow(new TransactionNotFoundException(nonExistentId));
 
-    assertThatThrownBy(
-            () ->
-                mockMvc.perform(
-                    get("/api/v1/transactions/%s".formatted(nonExistentId))
-                        .contentType(MediaType.APPLICATION_JSON)))
-        .hasCauseInstanceOf(IllegalArgumentException.class)
-        .hasMessageContaining("Transaction ID not found.");
+    mockMvc
+        .perform(
+            get("/api/v1/transactions/%s".formatted(nonExistentId)).contentType(APPLICATION_JSON))
+        .andExpect(status().isNotFound());
   }
 
   @Test
@@ -167,8 +165,8 @@ class TransactionControllerTest {
     mockMvc
         .perform(
             post("/api/v1/transactions")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(request)))
+                .contentType(APPLICATION_JSON)
+                .content(Objects.requireNonNull(objectMapper.writeValueAsString(request))))
         .andExpect(status().isBadRequest());
   }
 
@@ -180,8 +178,8 @@ class TransactionControllerTest {
     mockMvc
         .perform(
             post("/api/v1/transactions")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(request)))
+                .contentType(APPLICATION_JSON)
+                .content(Objects.requireNonNull(objectMapper.writeValueAsString(request))))
         .andExpect(status().isBadRequest());
   }
 
@@ -193,40 +191,37 @@ class TransactionControllerTest {
     mockMvc
         .perform(
             post("/api/v1/transactions")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(request)))
+                .contentType(APPLICATION_JSON)
+                .content(Objects.requireNonNull(objectMapper.writeValueAsString(request))))
         .andExpect(status().isBadRequest());
   }
 
   @Test
-  void should_ThrowException_When_TargetCurrencyLengthIsInvalid() throws Exception {
-    assertThatThrownBy(
-            () ->
-                mockMvc.perform(
-                    get("/api/v1/transactions/conversions")
-                        .param("target_country", "DE")
-                        .param("target_currency", "EU")
-                        .contentType(MediaType.APPLICATION_JSON)))
-        .hasCauseInstanceOf(jakarta.validation.ConstraintViolationException.class);
+  void should_ReturnBadRequest_When_TargetCurrencyLengthIsInvalid() throws Exception {
+    mockMvc
+        .perform(
+            get("/api/v1/transactions/conversions")
+                .param("target_country", "DE")
+                .param("target_currency", "EU")
+                .contentType(APPLICATION_JSON))
+        .andExpect(status().isBadRequest());
   }
 
   @Test
-  void should_ThrowException_When_TargetCountryLengthIsInvalid() throws Exception {
-    assertThatThrownBy(
-            () ->
-                mockMvc.perform(
-                    get("/api/v1/transactions/conversions")
-                        .param("target_country", "D")
-                        .param("target_currency", "EUR")
-                        .contentType(MediaType.APPLICATION_JSON)))
-        .hasCauseInstanceOf(jakarta.validation.ConstraintViolationException.class);
+  void should_ReturnBadRequest_When_TargetCountryLengthIsInvalid() throws Exception {
+    mockMvc
+        .perform(
+            get("/api/v1/transactions/conversions")
+                .param("target_country", "D")
+                .param("target_currency", "EUR")
+                .contentType(APPLICATION_JSON))
+        .andExpect(status().isBadRequest());
   }
 
   @Test
   void should_ReturnBadRequest_When_IdIsInvalidFormat() throws Exception {
     mockMvc
-        .perform(
-            get("/api/v1/transactions/12345-invalid-uuid").contentType(MediaType.APPLICATION_JSON))
+        .perform(get("/api/v1/transactions/12345-invalid-uuid").contentType(APPLICATION_JSON))
         .andExpect(status().isBadRequest());
   }
 }

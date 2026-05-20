@@ -158,13 +158,13 @@ class TransactionServiceTest {
   }
 
   @Test
-  void should_ReturnEmptyOptional_When_IdDoesNotExist() {
+  void should_ThrowNotFound_When_IdDoesNotExist() {
     UUID missingTransactionId = UUID.randomUUID();
     when(transactionRepository.findById(missingTransactionId)).thenReturn(Optional.empty());
 
     assertThatThrownBy(() -> transactionService.getTransactionById(missingTransactionId))
-        .isInstanceOf(IllegalArgumentException.class)
-        .hasMessageContaining("not found");
+        .isInstanceOf(TransactionNotFoundException.class)
+        .hasMessageContaining("was not found");
 
     verify(transactionRepository, times(1)).findById(missingTransactionId);
   }

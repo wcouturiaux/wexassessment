@@ -7,6 +7,7 @@ import java.util.UUID;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
+import org.springframework.lang.NonNull;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -65,7 +66,7 @@ public class TransactionController {
   }
 
   @GetMapping("/{id}")
-  public ResponseEntity<TransactionResponse> getTransactionById(@PathVariable UUID id) {
+  public ResponseEntity<TransactionResponse> getTransactionById(@NonNull @PathVariable UUID id) {
     logger.info("API: [FETCH_BY_ID] database transaction for ID: [{}]", id);
     TransactionResponse response = transactionService.getTransactionById(id);
     return ResponseEntity.ok(response);

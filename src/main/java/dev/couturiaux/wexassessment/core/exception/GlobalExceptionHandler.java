@@ -61,6 +61,19 @@ public class GlobalExceptionHandler {
     return problemDetail;
   }
 
+  @ExceptionHandler(jakarta.validation.ConstraintViolationException.class)
+  public ProblemDetail handleConstraintViolationException(
+      jakarta.validation.ConstraintViolationException ex) {
+    logger.warn("API: Request failed constraint validation. Message: {}", ex.getMessage());
+
+    ProblemDetail problemDetail =
+        ProblemDetail.forStatusAndDetail(
+            HttpStatus.BAD_REQUEST, "Your request parameters are invalid: " + ex.getMessage());
+    problemDetail.setTitle("Constraint Violation");
+    problemDetail.setProperty(TIMESTAMP_PROPERTY, Instant.now());
+    return problemDetail;
+  }
+
   @ExceptionHandler(Exception.class)
   public ProblemDetail handleGenericException(Exception ex) {
     logger.error("SYSTEM: Unhandled system error", ex);

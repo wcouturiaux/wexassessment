@@ -1,6 +1,8 @@
 package dev.couturiaux.wexassessment.transaction;
 
+import dev.couturiaux.wexassessment.core.currency.ExchangeRateNotFoundException;
 import dev.couturiaux.wexassessment.core.currency.TreasuryExchangeClient;
+import dev.couturiaux.wexassessment.core.exception.TreasuryApiUnavailableException;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDate;
@@ -62,7 +64,7 @@ public class TransactionService {
 
     String countryCurrencyKey = targetCountry + "-" + targetCurrency;
 
-    Map<LocalDate, BigDecimal> fxRateCache = buildFxRateCache(uniqueDates, countryCurrencyKey);
+    Map<LocalDate, FxRateResult> fxRateCache = buildFxRateCache(uniqueDates, countryCurrencyKey);
 
     return rawTransactions.stream()
         .map(transaction -> convertToFxResponse(transaction, fxRateCache, targetCurrency))
@@ -73,29 +75,62 @@ public class TransactionService {
     return transactions.stream().map(Transaction::getTransactionDate).collect(Collectors.toSet());
   }
 
-  private Map<LocalDate, BigDecimal> buildFxRateCache(
+  private Map<LocalDate, FxRateResult> buildFxRateCache(
       Set<LocalDate> dates, String countryCurrencyKey) {
     return dates.stream()
         .collect(
             Collectors.toMap(
                 date -> date,
-                date ->
-                    treasuryExchangeClient.getFxRate(
-                        countryCurrencyKey, date.minusMonths(6), date)));
+                date -> {
+                  try {
+                    BigDecimal rate =
+                        treasuryExchangeClient.getFxRate(
+                            countryCurrencyKey, date.minusMonths(6), date);
+                    return new FxRateResult(rate, null);
+                  } catch (ExchangeRateNotFoundException | TreasuryApiUnavailableException ex) {
+                    return new FxRateResult(null, ex.getMessage());
+                  }
+                }));
   }
 
   private ConvertedTransactionResponse convertToFxResponse(
-      Transaction transaction, Map<LocalDate, BigDecimal> fxRateCache, String targetCurrency) {
+      Transaction transaction, Map<LocalDate, FxRateResult> fxRateCache, String targetCurrency) {
     UUID transactionId =
         Objects.requireNonNull(transaction.getId(), "Persisted Transaction must have an ID.");
     String id = transactionId.toString();
     BigDecimal amount = transaction.getAmount();
-    BigDecimal fxRate =
-        Objects.requireNonNull(
-            fxRateCache.get(transaction.getTransactionDate()),
-            () ->
-                "CRITICAL: Missing FX rate for date %s"
-                    .formatted(transaction.getTransactionDate()));
+
+    FxRateResult fxResult = fxRateCache.get(transaction.getTransactionDate());
+
+    if (fxResult == null) {
+      return new ConvertedTransactionResponse(
+          id,
+          transaction.getDescription(),
+          transaction.getTransactionDate(),
+          amount,
+          targetCurrency,
+          null,
+          null,
+          "Critical error: No cache entry found for date.");
+    }
+
+    if (fxResult.errorMessage() != null) {
+      logger.warn(
+          "SERVICE: [CONVERSION_FAILED] Transaction ID [{}] failed conversion: {}",
+          id,
+          fxResult.errorMessage());
+      return new ConvertedTransactionResponse(
+          id,
+          transaction.getDescription(),
+          transaction.getTransactionDate(),
+          amount,
+          targetCurrency,
+          null,
+          null,
+          fxResult.errorMessage());
+    }
+
+    BigDecimal fxRate = fxResult.rate();
     BigDecimal convertedAmount = amount.multiply(fxRate).setScale(2, RoundingMode.HALF_UP);
     logger.debug(
         "SERVICE: [CONVERSION_SUCCESS] Calculated rate for transaction ID [{}]. Rate: {},"
@@ -112,7 +147,8 @@ public class TransactionService {
         amount,
         targetCurrency,
         fxRate,
-        convertedAmount);
+        convertedAmount,
+        null);
   }
 
   private TransactionResponse mapToResponse(Transaction transaction) {
@@ -122,4 +158,6 @@ public class TransactionService {
         transaction.getTransactionDate(),
         transaction.getAmount());
   }
+
+  private record FxRateResult(BigDecimal rate, String errorMessage) {}
 }
