@@ -134,7 +134,18 @@ class TransactionIntegrationTest {
         .andExpect(status().isBadRequest())
         .andExpect(jsonPath("$.title").value("Validation Failed"))
         .andExpect(jsonPath("$.status").value(400))
-        .andExpect(jsonPath("$.invalid_params").isArray());
+        .andExpect(jsonPath("$.invalid_params").isArray())
+        .andExpect(
+            jsonPath("$.invalid_params[?(@.field == 'description')].reason")
+                .value(
+                    org.hamcrest.Matchers.hasItem("Description cannot be empty or just spaces.")))
+        .andExpect(
+            jsonPath("$.invalid_params[?(@.field == 'amount')].reason")
+                .value(org.hamcrest.Matchers.hasItem("Amount must be positive.")))
+        .andExpect(
+            jsonPath("$.invalid_params[?(@.field == 'transaction_date')].reason")
+                .value(
+                    org.hamcrest.Matchers.hasItem("Transaction date cannont be in the future.")));
   }
 
   @Test
@@ -308,5 +319,26 @@ class TransactionIntegrationTest {
                 .value(
                     "No active exchange rate record exists for currency key [CA-CAD] within the 6"
                         + " months of the transaction date."));
+  }
+
+  @Test
+  void should_ReturnBadRequest_When_SingleConversionParametersAreInvalid() throws Exception {
+    UUID randomId = UUID.randomUUID();
+
+    mockMvc
+        .perform(
+            get("/api/v1/transactions/%s/conversions".formatted(randomId))
+                .param("target_country", "CANADA")
+                .param("target_currency", "CADDY"))
+        .andExpect(status().isBadRequest())
+        .andExpect(jsonPath("$.title").value("Validation Failed"))
+        .andExpect(jsonPath("$.status").value(400))
+        .andExpect(jsonPath("$.invalid_params").isArray())
+        .andExpect(
+            jsonPath("$.invalid_params[?(@.field == 'target_country')].reason")
+                .value(org.hamcrest.Matchers.hasItem("Target country code must be 2 characters")))
+        .andExpect(
+            jsonPath("$.invalid_params[?(@.field == 'target_currency')].reason")
+                .value(org.hamcrest.Matchers.hasItem("Target currency code must be 3 characters")));
   }
 }

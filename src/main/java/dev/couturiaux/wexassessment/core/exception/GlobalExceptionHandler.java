@@ -50,7 +50,7 @@ public class GlobalExceptionHandler {
                 error ->
                     Map.of(
                         "field",
-                        error.getField(),
+                        toSnakeCase(error.getField()),
                         "reason",
                         error.getDefaultMessage() != null
                             ? error.getDefaultMessage()
@@ -64,14 +64,38 @@ public class GlobalExceptionHandler {
   @ExceptionHandler(jakarta.validation.ConstraintViolationException.class)
   public ProblemDetail handleConstraintViolationException(
       jakarta.validation.ConstraintViolationException ex) {
-    logger.warn("API: Request failed constraint validation. Message: {}", ex.getMessage());
+    List<Map<String, String>> invalidParams =
+        ex.getConstraintViolations().stream()
+            .map(
+                violation -> {
+                  String fieldName = "parameter";
+                  for (jakarta.validation.Path.Node node : violation.getPropertyPath()) {
+                    fieldName = node.getName();
+                  }
+                  return Map.of(
+                      "field",
+                      toSnakeCase(fieldName),
+                      "reason",
+                      violation.getMessage() != null ? violation.getMessage() : "Invalid Value");
+                })
+            .toList();
+
+    logger.warn("API: Request failed constraint validation. Errors: {}", invalidParams);
 
     ProblemDetail problemDetail =
         ProblemDetail.forStatusAndDetail(
-            HttpStatus.BAD_REQUEST, "Your request parameters are invalid: " + ex.getMessage());
-    problemDetail.setTitle("Constraint Violation");
+            HttpStatus.BAD_REQUEST, "Your request contains invalid parameters.");
+    problemDetail.setTitle("Validation Failed");
     problemDetail.setProperty(TIMESTAMP_PROPERTY, Instant.now());
+    problemDetail.setProperty("invalid_params", invalidParams);
     return problemDetail;
+  }
+
+  private String toSnakeCase(String camelCase) {
+    if (camelCase == null) {
+      return null;
+    }
+    return camelCase.replaceAll("([a-z])([A-Z])", "$1_$2").toLowerCase();
   }
 
   @ExceptionHandler(Exception.class)
