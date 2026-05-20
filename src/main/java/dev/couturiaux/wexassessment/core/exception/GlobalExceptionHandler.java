@@ -23,7 +23,7 @@ public class GlobalExceptionHandler {
 
   @ExceptionHandler(ResourceNotFoundException.class)
   public ProblemDetail handleNotFoundException(ResourceNotFoundException ex) {
-    logger.warn("Lookup failed: {}", ex.getMessage());
+    logger.warn("SERVICE: Lookup failed: {}", ex.getMessage());
 
     ProblemDetail problemDetail =
         ProblemDetail.forStatusAndDetail(HttpStatus.NOT_FOUND, ex.getMessage());
@@ -35,7 +35,7 @@ public class GlobalExceptionHandler {
   @ExceptionHandler(MethodArgumentNotValidException.class)
   public ProblemDetail handleValidationExceptions(MethodArgumentNotValidException ex) {
     logger.warn(
-        "Request failed validation check. Input error count: {}",
+        "API: Request failed validation check. Input error count: {}",
         ex.getBindingResult().getErrorCount());
 
     ProblemDetail problemDetail =
@@ -63,7 +63,7 @@ public class GlobalExceptionHandler {
 
   @ExceptionHandler(Exception.class)
   public ProblemDetail handleGenericException(Exception ex) {
-    logger.error("Unhandled system error", ex);
+    logger.error("SYSTEM: Unhandled system error", ex);
 
     ProblemDetail problemDetail =
         ProblemDetail.forStatusAndDetail(
@@ -76,7 +76,7 @@ public class GlobalExceptionHandler {
 
   @ExceptionHandler(HttpMessageNotReadableException.class)
   public ProblemDetail handleHttpMessageNotReadableException(HttpMessageNotReadableException ex) {
-    logger.warn("Malformed HTTP request payload: {}", ex.getMostSpecificCause().getMessage());
+    logger.warn("API: Malformed HTTP request payload: {}", ex.getMostSpecificCause().getMessage());
 
     ProblemDetail problemDetail =
         ProblemDetail.forStatusAndDetail(
@@ -96,7 +96,7 @@ public class GlobalExceptionHandler {
         (requiredTypeClass != null) ? requiredTypeClass.getSimpleName() : "unknown";
 
     logger.warn(
-        "Parameter type mismatch: Field {} received value [{}] but requires type [{}]",
+        "API: Parameter type mismatch: Field {} received value [{}] but requires type [{}]",
         paramName,
         rejectedValue,
         requiredType);
@@ -119,8 +119,8 @@ public class GlobalExceptionHandler {
     String paramType = ex.getParameterType();
 
     logger.warn(
-        "Required request paramter missing: Name '{}' of type [{}] was omitted from the request"
-            + " URL",
+        "API: Required request paramter missing: Name '{}' of type [{}] was omitted from the"
+            + " request URL",
         paramName,
         paramType);
 
@@ -138,7 +138,7 @@ public class GlobalExceptionHandler {
 
   @ExceptionHandler(UnsupportedCountryCurrencyException.class)
   ProblemDetail handleUnsupportedCountryCurrencyException(UnsupportedCountryCurrencyException ex) {
-    logger.warn("Business rule violation: {}", ex.getMessage());
+    logger.warn("SERVICE: Unsupported country currency violation: {}", ex.getMessage());
 
     ProblemDetail problemDetail =
         ProblemDetail.forStatusAndDetail(HttpStatus.UNPROCESSABLE_ENTITY, ex.getMessage());
@@ -149,7 +149,7 @@ public class GlobalExceptionHandler {
 
   @ExceptionHandler(ExchangeRateNotFoundException.class)
   ProblemDetail handleExchangeRateNotFound(ExchangeRateNotFoundException ex) {
-    logger.warn("Historical rate gap encountered: {}", ex.getMessage());
+    logger.warn("INTEGRATION: Historical rate gap encountered: {}", ex.getMessage());
 
     ProblemDetail problemDetail =
         ProblemDetail.forStatusAndDetail(HttpStatus.NOT_FOUND, ex.getMessage());
@@ -160,7 +160,7 @@ public class GlobalExceptionHandler {
 
   @ExceptionHandler(TreasuryApiUnavailableException.class)
   ProblemDetail handleTreasuryUnavailable(TreasuryApiUnavailableException ex) {
-    logger.error("Treasury API integration crash intercepted: ", ex);
+    logger.error("INTEGRATION: Treasury API integration crash intercepted: ", ex);
 
     ProblemDetail problemDetail =
         ProblemDetail.forStatusAndDetail(HttpStatus.BAD_GATEWAY, ex.getMessage());

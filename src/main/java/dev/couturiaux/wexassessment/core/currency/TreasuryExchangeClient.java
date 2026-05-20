@@ -8,6 +8,8 @@ import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Objects;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
@@ -21,6 +23,7 @@ public class TreasuryExchangeClient {
   private final String exchangeRatesPath;
   private static final DateTimeFormatter TREASURY_DATE_FORMATTER =
       DateTimeFormatter.ofPattern("M/dd/yyyy");
+  private static final Logger logger = LoggerFactory.getLogger(TreasuryExchangeClient.class);
 
   public TreasuryExchangeClient(
       TreasuryExchangeRateProvider exchangeRateProvider,
@@ -47,6 +50,12 @@ public class TreasuryExchangeClient {
     String filterValue =
         "country_currency_desc:eq:%s,effective_date:gte:%s,effective_date:lte:%s&sort=-effective_date"
             .formatted(treasuryDesc, formattedStart, formattedEnd);
+    logger.info(
+        "INTEGRATION: [EXTERNAL_CALL] Requesting US Treasury rate for key [{}] inside"
+            + " window: {} to {}",
+        countryCurrencyKey,
+        startDate,
+        endDate);
 
     try {
       TreasuryApiResponse response =

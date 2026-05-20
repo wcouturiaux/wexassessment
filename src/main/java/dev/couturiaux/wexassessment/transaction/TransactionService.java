@@ -37,7 +37,7 @@ public class TransactionService {
             transactionDto.amount(),
             transactionDto.transactionDate());
     Transaction transaction = transactionRepository.save(newTransaction);
-    logger.info("Created transaction with ID: {}", transaction.getId());
+    logger.info("SERVICE: Created transaction with ID: {}", transaction.getId());
 
     return mapToResponse(transaction);
   }
@@ -97,6 +97,13 @@ public class TransactionService {
                 "CRITICAL: Missing FX rate for date %s"
                     .formatted(transaction.getTransactionDate()));
     BigDecimal convertedAmount = amount.multiply(fxRate).setScale(2, RoundingMode.HALF_UP);
+    logger.debug(
+        "SERVICE: [CONVERSION_SUCCESS] Calculated rate for transaction ID [{}]. Rate: {},"
+            + " Result: {} {}",
+        transactionId,
+        fxRate,
+        convertedAmount,
+        targetCurrency);
 
     return new ConvertedTransactionResponse(
         id,
