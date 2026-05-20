@@ -8,7 +8,6 @@ import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -50,6 +49,34 @@ public class TransactionService {
         .findById(id)
         .map(TransactionResponse::from)
         .orElseThrow(() -> new TransactionNotFoundException(id));
+  }
+
+  public ConvertedTransactionResponse getConvertedTransactionById(
+      @NonNull UUID id, String targetCountry, String targetCurrency) {
+    Transaction transaction =
+        transactionRepository.findById(id).orElseThrow(() -> new TransactionNotFoundException(id));
+
+    String countryCurrencyKey = targetCountry + "-" + targetCurrency;
+    LocalDate date = transaction.getTransactionDate();
+
+    try {
+      BigDecimal rate =
+          treasuryExchangeClient.getFxRate(countryCurrencyKey, date.minusMonths(6), date);
+
+      logger.info(
+          "SERVICE: [CONVERSION_SUCCESS] Single calculated rate for transaction ID [{}]. Rate: {}",
+          transaction.getId(),
+          rate);
+
+      return buildConvertedResponse(transaction, targetCurrency, rate, null);
+    } catch (ExchangeRateNotFoundException | TreasuryApiUnavailableException ex) {
+      logger.warn(
+          "SERVICE: [CONVERSION_FAILED] Single transaction ID [{}] failed conversion: {}",
+          transaction.getId(),
+          ex.getMessage());
+
+      return buildConvertedResponse(transaction, targetCurrency, null, ex.getMessage());
+    }
   }
 
   public List<TransactionResponse> getAllTransactions() {
@@ -95,60 +122,45 @@ public class TransactionService {
 
   private ConvertedTransactionResponse convertToFxResponse(
       Transaction transaction, Map<LocalDate, FxRateResult> fxRateCache, String targetCurrency) {
-    UUID transactionId =
-        Objects.requireNonNull(transaction.getId(), "Persisted Transaction must have an ID.");
-    String id = transactionId.toString();
-    BigDecimal amount = transaction.getAmount();
-
     FxRateResult fxResult = fxRateCache.get(transaction.getTransactionDate());
 
     if (fxResult == null) {
-      return new ConvertedTransactionResponse(
-          id,
-          transaction.getDescription(),
-          transaction.getTransactionDate(),
-          amount,
-          targetCurrency,
-          null,
-          null,
-          "Critical error: No cache entry found for date.");
+      return buildConvertedResponse(
+          transaction, targetCurrency, null, "Critical error: No cache entry found for date.");
     }
 
     if (fxResult.errorMessage() != null) {
       logger.warn(
           "SERVICE: [CONVERSION_FAILED] Transaction ID [{}] failed conversion: {}",
-          id,
+          transaction.getId(),
           fxResult.errorMessage());
-      return new ConvertedTransactionResponse(
-          id,
-          transaction.getDescription(),
-          transaction.getTransactionDate(),
-          amount,
-          targetCurrency,
-          null,
-          null,
-          fxResult.errorMessage());
+      return buildConvertedResponse(transaction, targetCurrency, null, fxResult.errorMessage());
     }
 
     BigDecimal fxRate = fxResult.rate();
-    BigDecimal convertedAmount = amount.multiply(fxRate).setScale(2, RoundingMode.HALF_UP);
     logger.debug(
-        "SERVICE: [CONVERSION_SUCCESS] Calculated rate for transaction ID [{}]. Rate: {},"
-            + " Result: {} {}",
-        transactionId,
-        fxRate,
-        convertedAmount,
-        targetCurrency);
+        "SERVICE: [CONVERSION_SUCCESS] Calculated rate for transaction ID [{}]. Rate: {}",
+        transaction.getId(),
+        fxRate);
 
+    return buildConvertedResponse(transaction, targetCurrency, fxRate, null);
+  }
+
+  private ConvertedTransactionResponse buildConvertedResponse(
+      Transaction transaction, String targetCurrency, BigDecimal rate, String errorMessage) {
+    BigDecimal convertedAmount = null;
+    if (rate != null) {
+      convertedAmount = transaction.getAmount().multiply(rate).setScale(2, RoundingMode.HALF_UP);
+    }
     return new ConvertedTransactionResponse(
-        id,
+        transaction.getId().toString(),
         transaction.getDescription(),
         transaction.getTransactionDate(),
-        amount,
+        transaction.getAmount(),
         targetCurrency,
-        fxRate,
+        rate,
         convertedAmount,
-        null);
+        errorMessage);
   }
 
   private TransactionResponse mapToResponse(Transaction transaction) {

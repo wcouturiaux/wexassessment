@@ -71,4 +71,19 @@ public class TransactionController {
     TransactionResponse response = transactionService.getTransactionById(id);
     return ResponseEntity.ok(response);
   }
+
+  @GetMapping("/{id}/conversions")
+  public ResponseEntity<ConvertedTransactionResponse> getConvertedTransactionById(
+      @NonNull @PathVariable UUID id,
+      @RequestParam(name = "target_country")
+          @Size(min = 2, max = 2, message = "Target country code must be 2 characters")
+          String targetCountry,
+      @RequestParam(name = "target_currency")
+          @Size(min = 3, max = 3, message = "Target currency code must be 3 characters")
+          String targetCurrency) {
+    logger.info("API: [FETCH_CONVERTED_BY_ID] database transaction conversion for ID: [{}]", id);
+    ConvertedTransactionResponse response =
+        transactionService.getConvertedTransactionById(id, targetCountry, targetCurrency);
+    return ResponseEntity.ok(response);
+  }
 }

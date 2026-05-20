@@ -77,13 +77,14 @@ The service exposes versioned REST endpoints utilizing a `snake_case` JSON prope
 | **GET** | `/api/v1/transactions` | Retrieve all purchase transactions in USD | None |
 | **GET** | `/api/v1/transactions/{id}` | Retrieve a single transaction by UUID | `id` (path parameter) |
 | **GET** | `/api/v1/transactions/conversions` | Retrieve transactions converted to target currency | `target_country` (query, e.g. `CA`), `target_currency` (query, e.g. `CAD`) |
+| **GET** | `/api/v1/transactions/{id}/conversions` | Retrieve a single transaction converted to target currency | `id` (path parameter), `target_country` (query, e.g. `CA`), `target_currency` (query, e.g. `CAD`) |
 
 ---
 
 ## 4. Verification & Code Quality
 
 ### Running Tests
-The test suite consists of **40 tests** covering unit validations, entity mappings, business logic edge-cases, and a comprehensive end-to-end integration test suite:
+The test suite consists of **43 tests** covering unit validations, entity mappings, business logic edge-cases, and a comprehensive end-to-end integration test suite:
 * **Unit Tests**: Coverage for controller request validation bounds, DTO/Entity parsing, and service conversion math.
 * **Integration Tests (`TransactionIntegrationTest`)**: Exercises the system holistically:
   - **Happy Path**: Verifies transaction insertion via REST HTTP `POST`, persistence in the real H2 database, fetching via `GET`, and conversion by mocking external HTTP endpoints.

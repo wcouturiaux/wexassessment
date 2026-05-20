@@ -231,4 +231,82 @@ class TransactionIntegrationTest {
                     "The US Treasury Fiscal Data API is currently unreachable or returned an"
                         + " invalid response."));
   }
+
+  @Test
+  void should_ConvertSingleTransaction_When_ValidRequest() throws Exception {
+    String description = "Single Test Headset";
+    BigDecimal usdAmount = new BigDecimal("100.00");
+    LocalDate date = LocalDate.of(2026, 5, 15);
+    Transaction tx = new Transaction(description, usdAmount, date);
+    tx = transactionRepository.save(tx);
+    UUID transactionId = tx.getId();
+
+    BigDecimal mockRate = new BigDecimal("1.365");
+    when(treasuryExchangeClient.getFxRate(eq("CA-CAD"), any(LocalDate.class), eq(date)))
+        .thenReturn(mockRate);
+
+    mockMvc
+        .perform(
+            get("/api/v1/transactions/%s/conversions".formatted(transactionId))
+                .param("target_country", "CA")
+                .param("target_currency", "CAD"))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.id").value(transactionId.toString()))
+        .andExpect(jsonPath("$.description").value(description))
+        .andExpect(jsonPath("$.amount").value("100.00"))
+        .andExpect(jsonPath("$.target_currency").value("CAD"))
+        .andExpect(jsonPath("$.exchange_rate").value("1.365"))
+        .andExpect(jsonPath("$.converted_amount").value("136.50"))
+        .andExpect(jsonPath("$.error_message").doesNotExist());
+  }
+
+  @Test
+  void should_ReturnNotFoundForSingleConversion_When_TransactionIdDoesNotExist() throws Exception {
+    UUID randomId = UUID.randomUUID();
+
+    mockMvc
+        .perform(
+            get("/api/v1/transactions/%s/conversions".formatted(randomId))
+                .param("target_country", "CA")
+                .param("target_currency", "CAD"))
+        .andExpect(status().isNotFound())
+        .andExpect(jsonPath("$.title").value("Resource Not Found"))
+        .andExpect(jsonPath("$.status").value(404))
+        .andExpect(
+            jsonPath("$.detail")
+                .value("Transaction with ID [%s] was not found.".formatted(randomId)))
+        .andExpect(jsonPath("$.timestamp").exists());
+  }
+
+  @Test
+  void should_GracefullyReturnEmptySingleConversionFields_When_ExchangeRateIsNotFound()
+      throws Exception {
+    String description = "Single No Rate Device";
+    BigDecimal amount = new BigDecimal("50.00");
+    LocalDate date = LocalDate.of(2026, 5, 15);
+    Transaction tx = new Transaction(description, amount, date);
+    tx = transactionRepository.save(tx);
+    UUID transactionId = tx.getId();
+
+    when(treasuryExchangeClient.getFxRate(eq("CA-CAD"), any(LocalDate.class), eq(date)))
+        .thenThrow(new ExchangeRateNotFoundException("CA-CAD"));
+
+    mockMvc
+        .perform(
+            get("/api/v1/transactions/%s/conversions".formatted(transactionId))
+                .param("target_country", "CA")
+                .param("target_currency", "CAD"))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.id").value(transactionId.toString()))
+        .andExpect(jsonPath("$.description").value(description))
+        .andExpect(jsonPath("$.amount").value("50.00"))
+        .andExpect(jsonPath("$.target_currency").value("CAD"))
+        .andExpect(jsonPath("$.exchange_rate").value((Object) null))
+        .andExpect(jsonPath("$.converted_amount").value((Object) null))
+        .andExpect(
+            jsonPath("$.error_message")
+                .value(
+                    "No active exchange rate record exists for currency key [CA-CAD] within the 6"
+                        + " months of the transaction date."));
+  }
 }
