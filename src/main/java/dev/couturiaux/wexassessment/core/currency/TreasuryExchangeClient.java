@@ -1,6 +1,8 @@
 package dev.couturiaux.wexassessment.core.currency;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import dev.couturiaux.wexassessment.core.exception.TreasuryApiUnavailableException;
+import dev.couturiaux.wexassessment.core.exception.UnsupportedCountryCurrencyException;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
@@ -9,6 +11,7 @@ import java.util.Objects;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
+import org.springframework.web.client.RestClientException;
 
 @Component
 public class TreasuryExchangeClient {
@@ -33,7 +36,10 @@ public class TreasuryExchangeClient {
         exchangeRateProvider
             .getTreasuryDescription(countryCurrencyKey)
             .orElseThrow(
-                () -> new IllegalArgumentException("Unsupported country or currency code."));
+                () ->
+                    new UnsupportedCountryCurrencyException(
+                        "The country currency combination [%s] is not supported"
+                            .formatted(countryCurrencyKey)));
 
     String formattedStart = startDate.format(TREASURY_DATE_FORMATTER);
     String formattedEnd = endDate.format(TREASURY_DATE_FORMATTER);
@@ -42,24 +48,33 @@ public class TreasuryExchangeClient {
         "country_currency_desc:eq:%s,effective_date:gte:%s,effective_date:lte:%s&sort=-effective_date"
             .formatted(treasuryDesc, formattedStart, formattedEnd);
 
-    TreasuryApiResponse response =
-        restClient
-            .get()
-            .uri(
-                builder ->
-                    builder
-                        .path(Objects.requireNonNull(exchangeRatesPath))
-                        .queryParam("fields", "exchange_rate,effective_date")
-                        .queryParam("filter", filterValue)
-                        .build())
-            .retrieve()
-            .body(TreasuryApiResponse.class);
+    try {
+      TreasuryApiResponse response =
+          restClient
+              .get()
+              .uri(
+                  builder ->
+                      builder
+                          .path(Objects.requireNonNull(exchangeRatesPath))
+                          .queryParam("fields", "exchange_rate,effective_date")
+                          .queryParam("filter", filterValue)
+                          .build())
+              .retrieve()
+              .body(TreasuryApiResponse.class);
 
-    if (response != null && response.data() != null && !response.data().isEmpty()) {
-      return new BigDecimal(response.data().get(0).exchangeRate);
+      if (response != null && response.data() != null && !response.data().isEmpty()) {
+        return new BigDecimal(response.data().get(0).exchangeRate);
+      }
+    } catch (RestClientException ex) {
+      throw new TreasuryApiUnavailableException(
+          "The US Treasury Fiscal Data API is currently unreachable or returned an invalid"
+              + " response.",
+          ex);
     }
 
-    throw new RuntimeException("Purchases cannot be converted to the target currency.");
+    throw new ExchangeRateNotFoundException(
+        "Purchases cannot be converted because no active exchange rate was found for key [%s] within the required 6-month window."
+            .formatted(countryCurrencyKey));
   }
 
   private record TreasuryApiResponse(List<TreasuryData> data) {}

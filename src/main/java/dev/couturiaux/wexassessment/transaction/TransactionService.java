@@ -10,6 +10,8 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -19,6 +21,7 @@ import org.springframework.transaction.annotation.Transactional;
 public class TransactionService {
   private final TransactionRepository transactionRepository;
   private final TreasuryExchangeClient treasuryExchangeClient;
+  private static final Logger logger = LoggerFactory.getLogger(TransactionService.class);
 
   public TransactionService(
       TransactionRepository transactionRepository, TreasuryExchangeClient treasuryExchangeClient) {
@@ -34,15 +37,17 @@ public class TransactionService {
             transactionDto.amount(),
             transactionDto.transactionDate());
     Transaction transaction = transactionRepository.save(newTransaction);
+    logger.info("Created transaction with ID: {}", transaction.getId());
+
     return mapToResponse(transaction);
   }
 
   public TransactionResponse getTransactionById(@NonNull UUID id) {
-    // TODO: replace error thown with custom after made
+
     return transactionRepository
         .findById(id)
         .map(TransactionResponse::from)
-        .orElseThrow(() -> new IllegalArgumentException("Transaction ID not found."));
+        .orElseThrow(() -> new TransactionNotFoundException(id));
   }
 
   public List<TransactionResponse> getAllTransactions() {
